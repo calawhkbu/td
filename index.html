@@ -1,0 +1,161 @@
+<html>
+
+<head>
+    <title>Next Train/Bus ETA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+        integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+
+    <!-- dayjs - date  -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.5/dayjs.min.js"
+        integrity="sha512-Ot7ArUEhJDU0cwoBNNnWe487kjL5wAOsIYig8llY/l0P2TUFwgsAHVmrZMHsT8NGo+HwkjTJsNErS6QqIkBxDw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- CDN example (jsDelivr) e.g. fromNow -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.5/plugin/relativeTime.min.js"
+        integrity="sha512-MVzDPmm7QZ8PhEiqJXKz/zw2HJuv61waxb8XXuZMMs9b+an3LoqOqhOEt5Nq3LY1e4Ipbbd/e+AWgERdHlVgaA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        dayjs.extend(window.dayjs_plugin_utc)
+        dayjs.extend(window.dayjs_plugin_relativeTime)
+    </script>
+    <script src="main.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+
+
+            $('#now').html(dayjs().format('YYYY-MM-DD HH:mm:ss'))
+            let stops_api = ''
+            let stops=[]
+            let mode=''
+
+            //Step 1 Select Mode of Transport
+            $('.bus').click(async function () {
+                let html = $('.bus')[0].innerText
+                $('#mode').html(html)
+                mode='bus'
+                stops_api = await route_list_uri(mode)
+
+
+            })
+
+            $('.mtr').click(async function () {
+                let html = $('.mtr')[0].innerText
+                $('#mode').html(html)
+                mode='mtr'
+                stops_api = await route_list_uri(mode)
+                debugger
+
+            })
+
+            //Step 2 Select Route
+            $('#rte').change(async function (e) {
+                let rte = $('#rte').val()
+                 stops = await api_filter_route(stops_api, rte)
+            })
+
+            //Step 4 Direction 
+            $('.dir').click(async function (e) {
+                let dir=e.currentTarget.dataset.dir
+                 let rteInfo=stops.find(o=>o.bound==dir)
+                 $('#rteInfo').html(`<p> ROUTE:${rteInfo.route}</p>
+                 <p>FROM:${rteInfo.orig_en}</p>
+                 <p>TO:${rteInfo.dest_en}</p> 
+                 `)
+
+                 let uri = await route_list_uri(mode,'route_list')
+
+                 let etas = await  api_get_stops(mode,uri,rteInfo.route,rteInfo.bound)
+                 let html=`<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                 if(etas && etas.length>0){
+                    etas.forEach((item,idx)=>{
+                        html+=`<tr>
+                                <td>${item.name} - ${item.chiName}</td>
+                                <td>${item.eta} <BR>(${item.fromNow})</td>
+                            </tr>`
+                    })
+                    html+=`</tbody></table>`
+                    $('#etas').html(html)
+
+                 }
+            })
+
+        })
+    </script>
+</head>
+
+<body class="container m-2">
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-secondary" onclick="location.reload()">Reset</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <h6>Mode of Transport: <span id='mode'></span></h6>
+            <div>Now: <span id='now'></span></div>
+            <hr>
+            <div class="row">
+                <button class="col m-2 btn btn-outline-info bus">Bus/Minibus</button>
+                <button class="col m-2 btn btn-outline-warning mtr">MTR</button>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col">
+            <h6>Route #: <input id='rte' type="text" class="form-control" autocomplete="off"
+                    placeholder="271/73X/706..."></h6>
+            <!-- <div class="row">
+                <button class="col btn btn-outline-success btn-blk rteGo">Go</button>
+            </div> -->
+        </div>
+    </div>
+    <hr>
+    <div class="row">
+        <div class="col">
+
+            <h6>Direction:
+                <div class="row">
+                    <button class="col m-2  dir btn btn-outline-secondary" data-dir="O">Oubound</button>
+                    <button class="col m-2 dir btn btn-outline-info" data-dir="I">Inbound</button>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div id="rteInfo"></div>
+                    </div>
+                </div>
+
+            </h6>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <h6>Stops with ETA (L)</h6>
+            <input type="text" id="stopName" class="form-control" placeholder="Type a Station Name">
+            <div id="etas"></div>
+        </div>
+    </div>
+    <hr>
+    <!-- <div class="row">
+        <div class="col">
+            <h6 style=""> <b>ETA (L)</b>: <span id='eta' style="font-size:2rem;">23:40
+                    <b>
+                        (in <span id='fromNow'>...</span>)
+                    </b> </span></h6>
+        </div>
+    </div> -->
+
+</body>
+
+</html>

@@ -1,0 +1,25 @@
+[
+    {
+        "mode": "bus",
+        "type": "route_list",
+        "uri": "https://data.etabus.gov.hk/v1/transport/kmb/route"
+    },
+    {
+        "mode": "bus",
+        "type": "stop_list",
+        "remarks":"/{stop_id}",
+
+        "uri": "https://data.etabus.gov.hk/v1/transport/kmb/stop"
+    },
+    {
+        "mode": "bus",
+        "type": "route-stop",
+        "uri": "https://data.etabus.gov.hk/v1/transport/kmb/route-stop"
+    },
+    {
+        "mode": "bus",
+        "type": "eta",
+        "remarks":"/{stop_id}",
+        "uri": "https://data.etabus.gov.hk/v1/transport/kmb/stop-eta"
+    }
+]
