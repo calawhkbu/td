@@ -26,6 +26,11 @@
         dayjs.extend(window.dayjs_plugin_utc)
         dayjs.extend(window.dayjs_plugin_relativeTime)
     </script>
+
+    <!-- dataTables -->
+    <script src="https://cdn.datatables.net/1.12.1/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.12.1/css/jquery.dataTables.min.css">
+
     <script src="main.js"></script>
 
 
@@ -36,11 +41,11 @@
             $('.dir').addClass('disabled')
 
             $('#now').html(dayjs().format('YYYY-MM-DD HH:mm:ss'))
-            let stops_api = ''
+            var stops_api = ''
             let stops = []
-            let mode = ''
-            let line = ''
-            let sta = ''
+            var mode = ''
+            var line = ''
+            var sta = ''
             $('#region').hide()
 
             //Step 1 Select Mode of Transport
@@ -51,6 +56,7 @@
                 stops_api = await route_list_uri(mode)
                 $('#lines').html('')
                 $('#rte').focus()
+                $('#sta').attr('disabled',true)
 
 
             })
@@ -58,6 +64,9 @@
             $('.minibus').click(async function () {
                 let html = $('.minibus')[0].innerText
                 $('#mode').html(html)
+                $('#rte').attr('disabled',true)
+                $('#sta').attr('disabled',true)
+
                 mode = 'minibus'
                 stops_api = await route_list_uri(mode)
                 let lines = await getGMBRegions()
@@ -66,8 +75,12 @@
                     line = e.currentTarget.dataset.line
                     $('#region').show()
                     $('#region').val(line)
+
+                    $('#rte').attr('disabled',false)
+                    $('#rte').focus()
+
                 })
-                $('#rte').focus()
+
 
             })
 
@@ -78,7 +91,10 @@
                 let lines = await showMTRLines()
                 $('#lines').html(lines)
                 init_line()
-                $('#rte').focus()
+                
+                $('#rte').attr('disabled',true)
+                $('.dir').addClass('disabled')
+                $('#sta').attr('disabled',false)
 
             })
 
@@ -128,7 +144,7 @@
                     let etas = await api_get_stops(mode, uri, rteInfo.route, rteInfo.bound)
                     async function showTable() {
                         let html = `<a href="https://search.kmb.hk/KMBWebSite/?action=routesearch&route=${rteInfo.route}" target="_blank">View Route/Schedules</a>`
-                        html += `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                        html += `<table id='list' class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
                         if (etas && etas.length > 0) {
                             etas.forEach((item, idx) => {
                                 let estimate = ''
@@ -144,6 +160,8 @@
                             })
                             html += `</tbody></table>`
                             $('#etas').html(html)
+                            $('#list').DataTable({})
+
                             $('.reload').click(async function () {
                                 alert('Reloaded')
                                 await showTable()
@@ -162,6 +180,7 @@
                     let html = await nextMinibusHTML(stops,routeId,route_seq)
                     $('#loader').hide()
                     $('#etas').html(html)
+                    $('#list').DataTable({})
 
                 }
 
@@ -180,7 +199,7 @@
 
 
                 async function showTable() {
-                    let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                    let html = `<table id='list' class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
                     let data = await api_get_mtr_eta(line, sta)
                     html += nextTrainHTML(data)
 
@@ -190,6 +209,8 @@
                         alert('Reloaded')
                         await showTable()
                     })
+                    $('#list').DataTable({})
+
                 }
                 await showTable()
             })

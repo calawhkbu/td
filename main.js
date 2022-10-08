@@ -72,6 +72,10 @@ function init_line() {
     $('.line').click(function (e) {
         line = e.currentTarget.dataset.line
         $('#rteInfo').html(line)
+        if(mode=='mtr'){
+            $('#sta').focus()
+
+        }
     })
 }
 
@@ -89,14 +93,14 @@ async function api_get_mtr_eta(line, sta) {
 
 function nextTrainHTML(data) {
     let result = ''
-    result += '<tr><td colspan="2"><button class="btn btn-outline-success reload">Reload</button></td></tr>'
-    result += '<tr><td colspan="2"><b>UP LINE</b></td></tr>'
+    result += '<tr><td colspan="2"><button class="btn btn-outline-success reload">Reload</button></td><td></td></tr>'
+    result += '<tr><td colspan="2"><b>UP LINE</b></td><td></td></tr>'
 
     data.UP.forEach((item) => {
         result += `<tr><td>${item.dest} - P${item.plat}</td><td>in ${dayjs(item.time).fromNow()} --${dayjs(item.time).format('HH:mm:ss')} L</td></tr>`
     })
 
-    result += '<td colspan="2"><b>DOWN LINE</b></td>'
+    result += '<tr><td colspan="2"><b>DOWN LINE</b></td><td></td></tr>'
     data.DOWN.forEach((item) => {
         result += `<tr>
         <td>${item.dest} - P${item.plat}</td><td>in ${dayjs(item.time).fromNow()} --${dayjs(item.time).format('HH:mm:ss')} L</td>
@@ -149,6 +153,8 @@ async function getGMBETA(stopId,routeId,route_seq=1){
 }
 async function nextMinibusHTML(data,routeId,route_seq){
     let html =''
+    html += `<table id='list' class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+
     if(!data || data.length==0) html ='NO record.'
     for(let i=0;i<data.length;i++){
         data[i]['eta']=await getGMBETA(data[i]['stop_id'],routeId,route_seq)
