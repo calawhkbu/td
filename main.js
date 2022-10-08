@@ -54,6 +54,27 @@ async function api_get_eta(uri, stopId, route, direction) {
 
     return result
 }
+async function api_get_directions(route) {
+    let uri = await route_list_uri('bus', 'route_list')
+    let result = '<table class="table table-striped">'
+    let outbound = await $.getJSON(`${uri}/${route}/outbound/1`)
+    outbound = outbound.data
+    let inbound = await $.getJSON(`${uri}/${route}/inbound/1`)
+    inbound = inbound.data
+
+    result += `<tr><td>Outbound:</td><td> ${outbound.orig_en} (${outbound.orig_tc})<td></tr>
+                <tr><td>Outbound:</td><td>${outbound.dest_en} (${outbound.dest_tc})</td></tr>`
+    result += `<tr><td>Inbound:</td><td> ${inbound.orig_en} (${inbound.orig_tc})<td></tr>
+                <tr><td>Inbound:</td><td>${inbound.dest_en} (${inbound.dest_tc})</td></tr>`
+
+
+    result += '</table>'
+
+    return result
+
+}
+
+//END OF BUS 
 
 
 async function showMTRLines() {
@@ -72,7 +93,7 @@ function init_line() {
     $('.line').click(function (e) {
         line = e.currentTarget.dataset.line
         $('#rteInfo').html(line)
-        if(mode=='mtr'){
+        if (mode == 'mtr') {
             $('#sta').focus()
 
         }
@@ -110,6 +131,7 @@ function nextTrainHTML(data) {
     return result
 }
 
+//END OF MTR
 
 async function getGMBRegions() {
     let data = await $.getJSON('gmb.json')
@@ -119,61 +141,95 @@ async function getGMBRegions() {
             html += `<button class='m-2 line btn btn-outline-secondary' data-line='${item.code}'>(${item.code})</button>`
         })
     }
-    return html 
+    return html
 }
 
-async function getRouteId(region,route){
-    let uri = await route_list_uri('minibus','route_data')
-    let {data:data} = await $.getJSON(`${uri}/${region}/${route}`)
+async function getRouteId(region, route) {
+    let uri = await route_list_uri('minibus', 'route_data')
+    let { data: data } = await $.getJSON(`${uri}/${region}/${route}`)
     return data && data[0] && data[0].route_id
 
 }
 
-async function getGMBRoutes(routeId,route_seq){
-    let uri = await route_list_uri('minibus','route-stop')
-    let {data:data} = await $.getJSON(`${uri}/${routeId}/${route_seq}`)
+async function getGMBRoutes(routeId, route_seq) {
+    let uri = await route_list_uri('minibus', 'route-stop')
+    let { data: data } = await $.getJSON(`${uri}/${routeId}/${route_seq}`)
     return data && data.route_stops
 
 }
 
 
-async function getGMBETA(stopId,routeId,route_seq=1){
-    let uri = await route_list_uri('minibus','eta')
-    let {data:data} = await $.getJSON(`${uri}/${stopId}`)
-    if(data && data.length>0){
-        data = data.find(o=>o.route_id==routeId  && o.route_seq==route_seq) &&
-        data.find(o=>o.route_id==routeId  && o.route_seq==route_seq).eta &&
-        data.find(o=>o.route_id==routeId  && o.route_seq==route_seq).eta.map(o=>o.timestamp)
+async function getGMBETA(stopId, routeId, route_seq = 1) {
+    let uri = await route_list_uri('minibus', 'eta')
+    let { data: data } = await $.getJSON(`${uri}/${stopId}`)
+    if (data && data.length > 0) {
+        data = data.find(o => o.route_id == routeId && o.route_seq == route_seq) &&
+            data.find(o => o.route_id == routeId && o.route_seq == route_seq).eta &&
+            data.find(o => o.route_id == routeId && o.route_seq == route_seq).eta.map(o => o.timestamp)
 
     }
 
-    return data 
+    return data
 
 
 }
-async function nextMinibusHTML(data,routeId,route_seq){
-    let html =''
+async function nextMinibusHTML(data, routeId, route_seq) {
+    let html = ''
     html += `<table id='list' class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
 
-    if(!data || data.length==0) html ='NO record.'
-    for(let i=0;i<data.length;i++){
-        data[i]['eta']=await getGMBETA(data[i]['stop_id'],routeId,route_seq)
+    if (!data || data.length == 0) html = 'NO record.'
+    for (let i = 0; i < data.length; i++) {
+        data[i]['eta'] = await getGMBETA(data[i]['stop_id'], routeId, route_seq)
     }
-    
 
-    if(data && data.length>0){
-        data.forEach((item)=>{
-            let estimate =''
-                if(item.eta && item.eta.length>0){
-                    item.eta.forEach((ETA)=>{
-                        estimate+=`<li>${dayjs(ETA).fromNow()} -- ${dayjs(ETA).format('HH:mm:ss')}L</li>`
-                    })
-                }
-            html+=`<tr>
+
+    if (data && data.length > 0) {
+        data.forEach((item) => {
+            let estimate = ''
+            if (item.eta && item.eta.length > 0) {
+                item.eta.forEach((ETA) => {
+                    estimate += `<li>${dayjs(ETA).fromNow()} -- ${dayjs(ETA).format('HH:mm:ss')}L</li>`
+                })
+            }
+            html += `<tr>
             <td>${item.name_en}- ${item.name_tc}</td>
             <td>${estimate}</td>
             </tr>`
         })
     }
-    return html 
+    return html
 }
+
+async function api_gmb_get_direction(region, route) {
+    let uri = await route_list_uri('minibus', 'route_list')
+    let result = '<table class="table table-striped">'
+    let extracted_dir = []
+    let { data: data } = await $.getJSON(`${uri}/${region}/${route}`)
+    let directions = []
+    if (data && data.length > 0) {
+        directions = data[0].directions
+        extracted_dir = directions.map(o => ({
+            route_seq: o.route_seq,
+            orig_tc: o.orig_tc,
+            orig_en: o.orig_en,
+            dest_tc: o.dest_tc,
+            dest_en: o.dest_en,
+            remarks: o.remarks
+        }))
+    }
+    if (extracted_dir.length > 0) {
+
+        extracted_dir.map((item) => {
+            let dir = item.route_seq == 1 ? 'Outbound' : 'Inbound'
+            result += `<tr><td>${dir}:</td><td> ${item.orig_en} (${item.orig_tc})<td></tr>
+                        <tr><td>${dir}:</td><td>${item.dest_en} (${item.dest_tc})</td></tr>`
+
+
+
+        })
+    }
+    return result
+
+}
+
+//END OF MINIBUS

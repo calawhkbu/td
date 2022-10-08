@@ -110,10 +110,14 @@
 
                 } else if (mode == 'bus') {
                     stops = await api_filter_route(stops_api, rte)
+                    let html = await api_get_directions(rte)
+                    $('#rteInfo').html(html)
 
                 } else if (mode == 'minibus') {
                     let region = $('#region').val()
                     let routeId = await getRouteId(region, rte)
+                    let dir_html= await api_gmb_get_direction(region,rte)
+                    $('#rteInfo').html(dir_html)
                     $('#routeId').val(routeId)
                     if(!routeId){
                         $('#etas').html('Route Not Found..')
@@ -160,7 +164,9 @@
                             })
                             html += `</tbody></table>`
                             $('#etas').html(html)
-                            $('#list').DataTable({})
+                            $('#list').DataTable({
+                                "ordering": false
+                            })
 
                             $('.reload').click(async function () {
                                 alert('Reloaded')
@@ -180,7 +186,9 @@
                     let html = await nextMinibusHTML(stops,routeId,route_seq)
                     $('#loader').hide()
                     $('#etas').html(html)
-                    $('#list').DataTable({})
+                    $('#list').DataTable({
+                        "ordering": false
+                    })
 
                 }
 
@@ -209,7 +217,9 @@
                         alert('Reloaded')
                         await showTable()
                     })
-                    $('#list').DataTable({})
+                    $('#list').DataTable({
+                        "ordering": false
+                    })
 
                 }
                 await showTable()
