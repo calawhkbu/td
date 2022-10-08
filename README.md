@@ -1,6 +1,17 @@
 # td
 next train (MTR, light Rail), next bus KMB, LWB , next green minibus API in Hong Kong
 
+# Installation
+NIL
+
+# Usage
+Unzip to your www Folder 
+e.g. /var/www/td
+
+- In your browswer type /td
+The Page should load immediately .
+
+
 - bus
 <img width="735" alt="Screenshot 2022-10-08 at 8 03 17 PM" src="https://user-images.githubusercontent.com/69632978/194706583-5257953e-ccb4-43be-880c-6b6ffc63d38d.png">
 
