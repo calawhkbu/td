@@ -56,7 +56,6 @@
                 let html = $('.mtr')[0].innerText
                 $('#mode').html(html)
                 mode = 'mtr'
-                stops_api = await route_list_uri(mode)
                 let lines = await showMTRLines()
                 $('#lines').html(lines)
                 init_line()
@@ -91,24 +90,32 @@
                 let uri = await route_list_uri(mode, 'route_list')
 
                 let etas = await api_get_stops(mode, uri, rteInfo.route, rteInfo.bound)
-                let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
-                if (etas && etas.length > 0) {
-                    etas.forEach((item, idx) => {
-                        let estimate = ''
-                        if (item.eta && item.eta.length > 0) {
-                            item.eta.forEach((eta) => {
-                                estimate += `<li>${dayjs(eta).fromNow()} -- ${dayjs(eta).format('HH:mm')}L</li>`
-                            })
-                        }
-                        html += `<tr>
-                                <td>${item.name} - ${item.chiName}</td>
+                async function showTable() {
+                    let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                    if (etas && etas.length > 0) {
+                        etas.forEach((item, idx) => {
+                            let estimate = ''
+                            if (item.eta && item.eta.length > 0) {
+                                item.eta.forEach((eta) => {
+                                    estimate += `<li>${dayjs(eta).fromNow()} -- ${dayjs(eta).format('HH:mm')}L</li>`
+                                })
+                            }
+                            html += `<tr>
+                                <td>${item.name} - ${item.chiName} <button class="btn btn-outline-success reload">Reload</button></td>
                                 <td>${estimate}</td>
                             </tr>`
-                    })
-                    html += `</tbody></table>`
-                    $('#etas').html(html)
+                        })
+                        html += `</tbody></table>`
+                        $('#etas').html(html)
+                        $('.reload').click(async function () {
+                            alert('Reloaded')
+                            await showTable()
+                        })
 
+                    }
                 }
+                showTable()
+
             })
 
 
@@ -118,18 +125,24 @@
 
             //Step 6 For MTR Select a Station
             $('#sta').change(async function (e) {
-                let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
                 sta = e.currentTarget.value && e.currentTarget.value.toUpperCase()
                 let line = $('#rteInfo')[0].innerText && $('#rteInfo')[0].innerText.toUpperCase()
 
-                let data = await api_get_mtr_eta(line, sta)
-                html += await nextTrainHTML(data)
 
-                html += `</tbody></table>`
-                $('#etas').html(html)
+               async function showTable() {
+                    let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                    let data = await api_get_mtr_eta(line, sta)
+                    html +=  nextTrainHTML(data)
 
+                    html += `</tbody></table>`
+                    $('#etas').html(html)
+                    $('.reload').click(async function () {
+                        alert('Reloaded')
+                        await showTable()
+                    })
+               }
+                await showTable()
             })
-
         })
     </script>
 </head>
