@@ -27,5 +27,32 @@
         "type": "eta",
         "remarks":"?line=EAL&sta=TAP",
         "uri": "https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php"
+    },
+    {
+        "mode": "minibus",
+        "type": "route_list",
+        "remarks":"{region} e.g. HKI,KLN,NT",
+        "uri": "https://data.etagmb.gov.hk/route"
+    },
+    {
+        "mode": "minibus",
+        "type": "route_data",
+        "remarks":"/{region}/{route_code}  To get routeId",
+        "uri": "https://data.etagmb.gov.hk/route"
+    },
+    {
+        "mode": "minibus",
+        "type": "route-stop",
+        "remarks":"/{routeId}/{route_seq} #route_seq = Direction 1 /2 ",
+        "uri": "https://data.etagmb.gov.hk/route-stop"
+    },
+    {
+        "mode": "minibus",
+        "type": "eta",
+        "remarks":"/{stopId} ",
+        "uri": "https://data.etagmb.gov.hk/eta/stop"
     }
+
+    
+
 ]

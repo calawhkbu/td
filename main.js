@@ -106,3 +106,68 @@ function nextTrainHTML(data) {
     return result
 }
 
+
+async function getGMBRegions() {
+    let data = await $.getJSON('gmb.json')
+    let html = ''
+    if (data.length > 0) {
+        data.forEach((item) => {
+            html += `<button class='m-2 line btn btn-outline-secondary' data-line='${item.code}'>(${item.code})</button>`
+        })
+    }
+    return html 
+}
+
+async function getRouteId(region,route){
+    let uri = await route_list_uri('minibus','route_data')
+    let {data:data} = await $.getJSON(`${uri}/${region}/${route}`)
+    return data && data[0] && data[0].route_id
+
+}
+
+async function getGMBRoutes(routeId,route_seq){
+    let uri = await route_list_uri('minibus','route-stop')
+    let {data:data} = await $.getJSON(`${uri}/${routeId}/${route_seq}`)
+    return data && data.route_stops
+
+}
+
+
+async function getGMBETA(stopId,routeId,route_seq=1){
+    let uri = await route_list_uri('minibus','eta')
+    let {data:data} = await $.getJSON(`${uri}/${stopId}`)
+    if(data && data.length>0){
+        data = data.find(o=>o.route_id==routeId  && o.route_seq==route_seq) &&
+        data.find(o=>o.route_id==routeId  && o.route_seq==route_seq).eta &&
+        data.find(o=>o.route_id==routeId  && o.route_seq==route_seq).eta.map(o=>o.timestamp)
+
+    }
+
+    return data 
+
+
+}
+async function nextMinibusHTML(data,routeId,route_seq){
+    let html =''
+    if(!data || data.length==0) html ='NO record.'
+    for(let i=0;i<data.length;i++){
+        data[i]['eta']=await getGMBETA(data[i]['stop_id'],routeId,route_seq)
+    }
+    
+
+    if(data && data.length>0){
+        data.forEach((item)=>{
+            let estimate =''
+                if(item.eta && item.eta.length>0){
+                    item.eta.forEach((ETA)=>{
+                        estimate+=`<li>${dayjs(ETA).fromNow()} -- ${dayjs(ETA).format('HH:mm:ss')}L</li>`
+                    })
+                }
+            html+=`<tr>
+            <td>${item.name_en}- ${item.name_tc}</td>
+            <td>${estimate}</td>
+            </tr>`
+        })
+    }
+    return html 
+}
