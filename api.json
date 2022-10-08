@@ -21,5 +21,11 @@
         "type": "eta",
         "remarks":"/{stop_id}",
         "uri": "https://data.etabus.gov.hk/v1/transport/kmb/stop-eta"
+    },
+    {
+        "mode": "mtr",
+        "type": "eta",
+        "remarks":"?line=EAL&sta=TAP",
+        "uri": "https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php"
     }
 ]

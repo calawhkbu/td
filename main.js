@@ -36,7 +36,7 @@ async function api_get_stops(mode, uri, route, direction) {
             })
         }
     }
-    debugger
+    
 
     return result
 }
@@ -52,5 +52,51 @@ async function api_get_eta(uri, stopId, route, direction) {
     result =data.filter(o => o.route == route && o.dir == direction && o.service_type == 1)
     result=result.map(o=>o.eta)
 
+    return result
+}
+
+
+async function showMTRLines(){
+    let result =''
+    let data = await $.getJSON('lines.json')
+    
+    if(data &&data.length>0){
+        data.forEach((item)=>{
+            result+=`<button class='m-2 line btn btn-outline-secondary' data-line='${item.code}'>${item.name} - (${item.code})</button>`
+        })
+    }
+    return result
+}
+
+function init_line() {
+    $('.line').click(function (e) {
+        line = e.currentTarget.dataset.line
+        $('#rteInfo').html(line)
+    })
+}
+
+async function api_get_mtr_eta(line,sta){
+    let uri = await route_list_uri('mtr', 'eta')
+
+    let {data:data} = await $.getJSON(uri+`?line=${line}&sta=${sta}`)
+    return data[`${line}-${sta}`]
+    
+}
+
+async function nextTrainHTML(data){
+    let result = ''
+    result+='<tr><td colspan="2"><b>UP LINE</b></td></tr>'
+
+    data.UP.forEach((item)=>{
+        result+=`<tr><td>${item.dest} - P${item.plat}</td><td>in ${dayjs(item.time).fromNow()} --${dayjs(item.time).format('HH:mm:ss')} L</td></tr>`
+    })
+
+    result+='<td colspan="2"><b>DOWN LINE</b></td>'
+    data.DOWN.forEach((item)=>{
+        result+=`<tr>
+        <td>${item.dest} - P${item.plat}</td><td>in ${dayjs(item.time).fromNow()} --${dayjs(item.time).format('HH:mm:ss')} L</td>
+        </tr>`
+    })
+  
     return result
 }

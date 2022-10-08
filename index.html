@@ -11,7 +11,7 @@
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
         integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
-        <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="main.css">
     <!-- dayjs - date  -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.5/dayjs.min.js"
         integrity="sha512-Ot7ArUEhJDU0cwoBNNnWe487kjL5wAOsIYig8llY/l0P2TUFwgsAHVmrZMHsT8NGo+HwkjTJsNErS6QqIkBxDw=="
@@ -27,7 +27,7 @@
         dayjs.extend(window.dayjs_plugin_relativeTime)
     </script>
     <script src="main.js"></script>
-    
+
 
     <script>
         $(document).ready(function () {
@@ -36,15 +36,18 @@
 
             $('#now').html(dayjs().format('YYYY-MM-DD HH:mm:ss'))
             let stops_api = ''
-            let stops=[]
-            let mode=''
+            let stops = []
+            let mode = ''
+            let line = ''
+            let sta = ''
 
             //Step 1 Select Mode of Transport
             $('.bus').click(async function () {
                 let html = $('.bus')[0].innerText
                 $('#mode').html(html)
-                mode='bus'
+                mode = 'bus'
                 stops_api = await route_list_uri(mode)
+                $('#lines').html('')
 
 
             })
@@ -52,50 +55,79 @@
             $('.mtr').click(async function () {
                 let html = $('.mtr')[0].innerText
                 $('#mode').html(html)
-                mode='mtr'
+                mode = 'mtr'
                 stops_api = await route_list_uri(mode)
-
+                let lines = await showMTRLines()
+                $('#lines').html(lines)
+                init_line()
             })
 
             //Step 2 Select Route
             $('#rte').change(async function (e) {
                 let rte = $('#rte').val().toUpperCase()
-                $('.loader').show()
-                 stops = await api_filter_route(stops_api, rte)
-                 $('.loader').hide()
+                $('#loader').show()
+                stops_api = await route_list_uri(mode)
+
+                if (mode == 'mtr') {
+
+                } else if (mode == 'bus') {
+                    stops = await api_filter_route(stops_api, rte)
+
+                }
+                $('#loader').hide()
+
 
             })
 
             //Step 4 Direction 
             $('.dir').click(async function (e) {
-                let dir=e.currentTarget.dataset.dir
-                 let rteInfo=stops.find(o=>o.bound==dir)
-                 $('#rteInfo').html(`<p> ROUTE:${rteInfo.route}</p>
+                let dir = e.currentTarget.dataset.dir
+                let rteInfo = stops.find(o => o.bound == dir)
+                $('#rteInfo').html(`<p> ROUTE:${rteInfo.route}</p>
                  <p>FROM:${rteInfo.orig_en}</p>
                  <p>TO:${rteInfo.dest_en}</p> 
                  `)
 
-                 let uri = await route_list_uri(mode,'route_list')
+                let uri = await route_list_uri(mode, 'route_list')
 
-                 let etas = await  api_get_stops(mode,uri,rteInfo.route,rteInfo.bound)
-                 let html=`<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
-                 if(etas && etas.length>0){
-                    etas.forEach((item,idx)=>{
+                let etas = await api_get_stops(mode, uri, rteInfo.route, rteInfo.bound)
+                let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                if (etas && etas.length > 0) {
+                    etas.forEach((item, idx) => {
                         let estimate = ''
-                        if(item.eta && item.eta.length>0){
-                            item.eta.forEach((eta)=>{
-                                estimate+=`<li>${dayjs(eta).fromNow()}</li>`
+                        if (item.eta && item.eta.length > 0) {
+                            item.eta.forEach((eta) => {
+                                estimate += `<li>${dayjs(eta).fromNow()} -- ${dayjs(eta).format('HH:mm')}L</li>`
                             })
                         }
-                        html+=`<tr>
+                        html += `<tr>
                                 <td>${item.name} - ${item.chiName}</td>
                                 <td>${estimate}</td>
                             </tr>`
                     })
-                    html+=`</tbody></table>`
+                    html += `</tbody></table>`
                     $('#etas').html(html)
 
-                 }
+                }
+            })
+
+
+            //Step 5 Click on Line for MTR
+
+
+
+            //Step 6 For MTR Select a Station
+            $('#sta').change(async function (e) {
+                let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                sta = e.currentTarget.value && e.currentTarget.value.toUpperCase()
+                let line = $('#rteInfo')[0].innerText && $('#rteInfo')[0].innerText.toUpperCase()
+
+                let data = await api_get_mtr_eta(line, sta)
+                html += await nextTrainHTML(data)
+
+                html += `</tbody></table>`
+                $('#etas').html(html)
+
             })
 
         })
@@ -124,10 +156,9 @@
     <div class="row">
         <div class="col">
             <h6>Route #: <input id='rte' type="text" class="form-control" autocomplete="off"
-                    placeholder="271/73X/706..."></h6>
-            <!-- <div class="row">
-                <button class="col btn btn-outline-success btn-blk rteGo">Go</button>
-            </div> -->
+                    placeholder="271/73X/EAL..."></h6>
+            <div class="row" id="lines">
+            </div>
         </div>
     </div>
     <hr>
@@ -151,7 +182,7 @@
     <div class="row">
         <div class="col">
             <h6>Stops with ETA (L)</h6>
-            <input type="text" id="stopName" class="form-control" placeholder="Type a Station Name">
+            <input type="text" id="sta" class="form-control" placeholder="Type a Station Name">
             <div id="etas"></div>
         </div>
     </div>
@@ -164,7 +195,7 @@
                     </b> </span></h6>
         </div>
     </div> -->
-<div id='loader'></div>
+    <div id='loader'></div>
 </body>
 
 </html>

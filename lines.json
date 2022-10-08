@@ -1,0 +1,18 @@
+[
+    {
+        "code": "AEL",
+        "name": "Airport Express"
+    },
+    {
+        "code": "TCL",
+        "name": "Tung Chung Line"
+    },
+    {
+        "code": "TML",
+        "name": "Tuen Ma Line"
+    },
+    {
+        "code": "EAL",
+        "name": "East Rail Line"
+    }
+]
