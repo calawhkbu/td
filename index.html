@@ -33,6 +33,7 @@
         $(document).ready(function () {
 
 
+            $('.dir').addClass('disabled')
 
             $('#now').html(dayjs().format('YYYY-MM-DD HH:mm:ss'))
             let stops_api = ''
@@ -49,6 +50,8 @@
                 mode = 'bus'
                 stops_api = await route_list_uri(mode)
                 $('#lines').html('')
+                $('#rte').focus()
+
 
             })
 
@@ -64,6 +67,8 @@
                     $('#region').show()
                     $('#region').val(line)
                 })
+                $('#rte').focus()
+
             })
 
             $('.mtr').click(async function () {
@@ -73,12 +78,16 @@
                 let lines = await showMTRLines()
                 $('#lines').html(lines)
                 init_line()
+                $('#rte').focus()
+
             })
 
             //Step 2 Select Route
             $('#rte').change(async function (e) {
                 let rte = $('#rte').val().toUpperCase()
                 $('#loader').show()
+                $('#dir_loading').html('Loading...')
+
                 stops_api = await route_list_uri(mode)
 
                 if (mode == 'mtr') {
@@ -89,12 +98,16 @@
                 } else if (mode == 'minibus') {
                     let region = $('#region').val()
                     let routeId = await getRouteId(region, rte)
-                    debugger
                     $('#routeId').val(routeId)
                     if(!routeId){
                         $('#etas').html('Route Not Found..')
                     }
                 }
+
+                //Clear Loading & Enable Buttons
+                $('#dir_loading').html('')
+                $('.dir').removeClass('disabled')
+
                 $('#loader').hide()
 
 
@@ -109,12 +122,12 @@
                  <p>FROM:${rteInfo.orig_en}</p>
                  <p>TO:${rteInfo.dest_en}</p> 
                  `)
+                 $('#etas').html('Loading...')
 
                     let uri = await route_list_uri(mode, 'route_list')
-
                     let etas = await api_get_stops(mode, uri, rteInfo.route, rteInfo.bound)
                     async function showTable() {
-                        let html = `< a href="https://search.kmb.hk/KMBWebSite/?action=routesearch&route=${rteInfo.route}" target="_blank">View Route/Schedules</a>`
+                        let html = `<a href="https://search.kmb.hk/KMBWebSite/?action=routesearch&route=${rteInfo.route}" target="_blank">View Route/Schedules</a>`
                         html += `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
                         if (etas && etas.length > 0) {
                             etas.forEach((item, idx) => {
@@ -218,10 +231,10 @@
             <input class="form-control" type="text" id="region" disabled>
             <input type="hidden" id="routeId">
 
-            <h6>Direction:
+            <h6>Direction: <span id="dir_loading"></span>
                 <div class="row">
-                    <button class="col m-2  dir btn btn-outline-secondary" data-dir="O">Oubound</button>
-                    <button class="col m-2 dir btn btn-outline-info" data-dir="I">Inbound</button>
+                    <button class="col m-2  dir btn btn-secondary" data-dir="O">Outbound</button>
+                    <button class="col m-2 dir btn btn-info" data-dir="I">Inbound</button>
                 </div>
                 <div class="row">
                     <div class="col">
