@@ -11,7 +11,7 @@
         crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
         integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
-
+        <link rel="stylesheet" href="main.css">
     <!-- dayjs - date  -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.5/dayjs.min.js"
         integrity="sha512-Ot7ArUEhJDU0cwoBNNnWe487kjL5wAOsIYig8llY/l0P2TUFwgsAHVmrZMHsT8NGo+HwkjTJsNErS6QqIkBxDw=="
@@ -27,6 +27,7 @@
         dayjs.extend(window.dayjs_plugin_relativeTime)
     </script>
     <script src="main.js"></script>
+    
 
     <script>
         $(document).ready(function () {
@@ -53,14 +54,16 @@
                 $('#mode').html(html)
                 mode='mtr'
                 stops_api = await route_list_uri(mode)
-                debugger
 
             })
 
             //Step 2 Select Route
             $('#rte').change(async function (e) {
-                let rte = $('#rte').val()
+                let rte = $('#rte').val().toUpperCase()
+                $('.loader').show()
                  stops = await api_filter_route(stops_api, rte)
+                 $('.loader').hide()
+
             })
 
             //Step 4 Direction 
@@ -78,9 +81,15 @@
                  let html=`<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
                  if(etas && etas.length>0){
                     etas.forEach((item,idx)=>{
+                        let estimate = ''
+                        if(item.eta && item.eta.length>0){
+                            item.eta.forEach((eta)=>{
+                                estimate+=`<li>${dayjs(eta).fromNow()}</li>`
+                            })
+                        }
                         html+=`<tr>
                                 <td>${item.name} - ${item.chiName}</td>
-                                <td>${item.eta} <BR>(${item.fromNow})</td>
+                                <td>${estimate}</td>
                             </tr>`
                     })
                     html+=`</tbody></table>`
@@ -155,7 +164,7 @@
                     </b> </span></h6>
         </div>
     </div> -->
-
+<div id='loader'></div>
 </body>
 
 </html>

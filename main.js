@@ -32,12 +32,11 @@ async function api_get_stops(mode, uri, route, direction) {
                 stop: routes[i].stop,
                 name: name.name_en,
                 chiName: name.name_tc,
-                eta: dayjs(eta).format('YYYY-MM-DD HH:mm:ss'),
-                fromNow: dayjs(eta).fromNow()
+                eta
             })
         }
     }
-
+    debugger
 
     return result
 }
@@ -49,6 +48,9 @@ async function api_get_stops_name(uri, stopId) {
 
 async function api_get_eta(uri, stopId, route, direction) {
     let { data: data } = await $.getJSON(`${uri}/${stopId}`)
-    return data.find(o => o.route == route && o.dir == direction && o.service_type == 1) &&
-        data.find(o => o.route == route && o.dir == direction && o.service_type == 1).eta
+    let result = []
+    result =data.filter(o => o.route == route && o.dir == direction && o.service_type == 1)
+    result=result.map(o=>o.eta)
+
+    return result
 }
