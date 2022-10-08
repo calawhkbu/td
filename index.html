@@ -78,7 +78,7 @@
 
             })
 
-            //Step 4 Direction 
+            //Step 4 Direction  BUS
             $('.dir').click(async function (e) {
                 let dir = e.currentTarget.dataset.dir
                 let rteInfo = stops.find(o => o.bound == dir)
@@ -91,7 +91,8 @@
 
                 let etas = await api_get_stops(mode, uri, rteInfo.route, rteInfo.bound)
                 async function showTable() {
-                    let html = `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
+                    let html=`<a href="https://search.kmb.hk/KMBWebSite/?action=routesearch&route=${rteInfo.route}" target="_blank">View Route/Schedules</a>`
+                     html+= `<table class="table table-striped"> <thead><th>Stop</th><th>ETA (L)</th></thead> <tbody>`
                     if (etas && etas.length > 0) {
                         etas.forEach((item, idx) => {
                             let estimate = ''
