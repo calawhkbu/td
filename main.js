@@ -61,11 +61,16 @@ async function api_get_directions(route) {
     outbound = outbound.data
     let inbound = await $.getJSON(`${uri}/${route}/inbound/1`)
     inbound = inbound.data
+    if (Object.keys(outbound).length == 0) {
+        result = 'No result'
+    } else {
+        result += `<tr><td>Outbound:</td><td> ${outbound.orig_en} (${outbound.orig_tc})<td></tr>
+        <tr><td>Outbound:</td><td>${outbound.dest_en} (${outbound.dest_tc})</td></tr>`
+        result += `<tr><td>Inbound:</td><td> ${inbound.orig_en || ''} (${inbound.orig_tc || ''})<td></tr>
+        <tr><td>Inbound:</td><td>${inbound.dest_en || ''} (${inbound.dest_tc || ""})</td></tr>`
+    }
 
-    result += `<tr><td>Outbound:</td><td> ${outbound.orig_en} (${outbound.orig_tc})<td></tr>
-                <tr><td>Outbound:</td><td>${outbound.dest_en} (${outbound.dest_tc})</td></tr>`
-    result += `<tr><td>Inbound:</td><td> ${inbound.orig_en} (${inbound.orig_tc})<td></tr>
-                <tr><td>Inbound:</td><td>${inbound.dest_en} (${inbound.dest_tc})</td></tr>`
+
 
 
     result += '</table>'
