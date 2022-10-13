@@ -238,3 +238,56 @@ async function api_gmb_get_direction(region, route) {
 }
 
 //END OF MINIBUS
+
+async function getMTRFeeder(routeName, language = 'en') {
+    if (!routeName) return { success: false, message: 'routeName Required' }
+    let uri = '/google.php?action=get&service=mtr_feeder&routeName=' + routeName
+    let bus = await $.getJSON(uri)
+    if (bus) {
+        try {
+            let bus_data = JSON.parse(bus)
+            return bus_data && bus_data.busStop
+
+
+        } catch (e) {
+            console.log('fail to getMTRFeeder')
+            console.log(e)
+            return ""
+        }
+    }
+}
+
+//Get first stop and last stop ETA 
+//bustStop[{bus: }]
+/**
+ * 
+ * {
+"arrivalTimeInSecond": "496",
+"arrivalTimeText": "8 minutes",
+"busId": "807",
+"busLocation": {
+"latitude": 0,
+"longitude": 0
+},
+"busRemark": null,
+"departureTimeInSecond": "0", //get
+"departureTimeText": "Departing / Departed", //get
+"isDelayed": "0",
+"isScheduled": "1",
+"lineRef": "K12_EG"
+},
+ */
+
+function getMTRFeeder_HTML(data) {
+    let html = ''
+    if (!data || data.length == 0) return html
+
+    //First and last Stops
+    let stops = data.filter(o=>o.busStopId.indexOf('010')!=-1)
+    let firstStop = stops[0].bus.map(o=>o.departureTimeText)
+    let lastStop = stops[1].bus.map(o=>o.departureTimeText)
+
+    return {[0]:firstStop,[1]:lastStop}
+
+}
+//END OF MTR FEEDER 2022-10-13

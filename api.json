@@ -23,6 +23,12 @@
         "uri": "https://data.etabus.gov.hk/v1/transport/kmb/stop-eta"
     },
     {
+        "mode": "bus",
+        "type": "mtr_eta",
+        "remarks":"post language:en,routeName:K17",
+        "uri": "https://rt.data.gov.hk/v1/transport/mtr/bus/getSchedule"
+    },
+    {
         "mode": "mtr",
         "type": "eta",
         "remarks":"?line=EAL&sta=TAP",
